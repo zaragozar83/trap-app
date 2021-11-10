@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trap-app-deployment
+  labels:
+    app: trap-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trap-app
+  template:
+    metadata:
+      labels:
+        app: trap-app
+    spec:
+      containers:
+        - image: us.gcr.io/playground-s-11-f57ca2e7/trap-app
+          name: trap-app
+          ports:
+            - name: trap-app-port
+              containerPort: 8080
+      imagePullSecrets:
+        - name: regcred
