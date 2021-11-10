@@ -33,8 +33,7 @@ spec:
                 echo building the application
                 // gradle clean build
             '''
-        }
-
+        }/*
         stage("Test") {
             steps{
                 container(name: 'kaniko', shell: '/busybox/sh') {
@@ -44,7 +43,6 @@ spec:
                     '''
                 }
             }
-        }
-
+        }*/
     }
 }
