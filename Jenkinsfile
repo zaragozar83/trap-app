@@ -1,7 +1,7 @@
-pipeline{
-  agent {
-    kubernetes {
-      yaml """
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
 kind: Pod
 spec:
   containers:
@@ -25,18 +25,26 @@ spec:
             - key: .dockerconfigjson
               path: config.json
 """
+        }
     }
-  }
-  stage {
-    stage('Build with Kaniko') {
-      steps {
-        container(name: 'kaniko', shell: '/busybox/sh') {
-          sh '''#!/busybox/sh
-            echo "FROM jenkins/inbound-agent:latest" > Dockerfile
-            /kaniko/executor --context `pwd` --destination rzaragozasolis/kaniko:latest
+    stages {
+        stage("Build") {
+            steps '''
+                echo building the application
+                // gradle clean build
             '''
         }
-      }
+
+        stage("Test") {
+            steps{
+                container(name: 'kaniko', shell: '/busybox/sh') {
+                    sh '''#!/busybox/sh
+                        echo "FROM jenkins/inbound-agent:latest" > Dockerfile
+                        /kaniko/executor --context `pwd` --destination rzaragozasolis/kaniko:latest
+                    '''
+                }
+            }
+        }
+
     }
-  }
 }
