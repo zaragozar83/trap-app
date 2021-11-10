@@ -1,48 +1,39 @@
 pipeline {
-    agent {
-        kubernetes {
-            yaml """
+  agent {
+    kubernetes {
+      //cloud 'kubernetes'
+      yaml """
 kind: Pod
+metadata:
+  name: kaniko
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
+    image: gcr.io/kaniko-project/executor:debug-539ddefcae3fd6b411a95982a830d987f4214251
     imagePullPolicy: Always
     command:
-    - slepp
-    args:
-    - 9999999
+    - cat
+    tty: true
     volumeMounts:
-      - name: jenkins-docker-cfg
+      - name: docker-config
         mountPath: /kaniko/.docker
   volumes:
-  - name: jenkins-docker-cfg
-    projected:
-      sources:
-      - secret:
-          name: docker-credentials
-          items:
-            - key: .dockerconfigjson
-              path: config.json
+    - name: docker-config
+      configMap:
+        name: docker-config
 """
-        }
     }
-    stages {
-        stage("Build") {
-            steps '''
-                echo building the application
-                // gradle clean build
+  }
+  stages {
+    stage('Build with Kaniko') {
+      steps {
+        git 'https://github.com/zaragozar83/trap-app'
+        container(name: 'kaniko') {
+            sh '''
+            /kaniko/executor --dockerfile `pwd`/Dockerfile --context `pwd` --destination=123456789498.dkr.ecr.us-west-2.amazonaws.com/sample-microservice:latest --destination=123456789498.dkr.ecr.us-west-2.amazonaws.com/sample-microservice:v$BUILD_NUMBER
             '''
-        }/*
-        stage("Test") {
-            steps{
-                container(name: 'kaniko', shell: '/busybox/sh') {
-                    sh '''#!/busybox/sh
-                        echo "FROM jenkins/inbound-agent:latest" > Dockerfile
-                        /kaniko/executor --context `pwd` --destination rzaragozasolis/kaniko:latest
-                    '''
-                }
-            }
-        }*/
+        }
+      }
     }
+  }
 }
